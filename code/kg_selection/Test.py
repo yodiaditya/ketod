@@ -34,16 +34,13 @@ elif conf.pretrained_model == "roberta":
 saved_model_path = os.path.join(conf.output_path, conf.saved_model_path)
 # model_dir_name = datetime.now().strftime("%Y%m%d%H%M%S")
 model_dir_name = datetime.now().strftime("%Y%m%d%H%M%S") + "_" + conf.model_save_name
-model_dir = os.path.join(
-    conf.output_path, 'inference_only_' + model_dir_name)
+model_dir = os.path.join(conf.output_path, 'inference_only_' + model_dir_name)
 results_path = os.path.join(model_dir, "results")
 os.makedirs(results_path, exist_ok=False)
 log_file = os.path.join(results_path, 'log.txt')
 test_feature_file = os.path.join(results_path, 'this_features.txt')
 
-
-test_data, test_examples = \
-    read_examples(input_path=conf.test_file, is_inference=True)
+test_data, test_examples = read_examples(input_path=conf.test_file, is_inference=True)
 
 kwargs = {"examples": test_examples,
           "tokenizer": tokenizer,
@@ -61,8 +58,7 @@ with open(test_feature_file, "w") as f:
 # with open(test_feature_file) as f:
 #     test_features = json.load(f)
 
-
-def generate(data_ori, data, model, ksave_dir, mode='valid'):
+def generate(data_ori, data, model, ksave_dir, mode='test'):
 
     ksave_dir_mode = os.path.join(ksave_dir, mode)
     os.makedirs(ksave_dir_mode, exist_ok=True)
@@ -111,11 +107,9 @@ def generate(data_ori, data, model, ksave_dir, mode='valid'):
                                           "predictions.json")
 
     if mode == "valid":
-        print_res = retrieve_evaluate(
-            all_logits, all_dialog_id, all_turn_id, all_snippet_id, output_prediction_file, conf.valid_file, topn=conf.topn, is_inference=True)
+        print_res = retrieve_evaluate(all_logits, all_dialog_id, all_turn_id, all_snippet_id, output_prediction_file, conf.valid_file, topn=conf.topn, is_inference=True)
     else:
-        print_res = retrieve_evaluate(
-            all_logits, all_dialog_id, all_turn_id, all_snippet_id, output_prediction_file, conf.test_file, topn=conf.topn, is_inference=True)
+        print_res = retrieve_evaluate(all_logits, all_dialog_id, all_turn_id, all_snippet_id, output_prediction_file, conf.test_file, topn=conf.topn, is_inference=True)
 
     write_log(log_file, print_res)
     print(print_res)
@@ -132,9 +126,5 @@ def generate_test():
     model.eval()
     generate(test_data, test_features, model, results_path, mode='test')
 
-
-
-
 if __name__ == '__main__':
-
     generate_test()

@@ -10,15 +10,12 @@ from config import parameters as conf
 from tqdm import tqdm
 
 # Progress bar
-
 TOTAL_BAR_LENGTH = 100.0
 last_time = time.time()
 begin_time = last_time
 print(os.popen("stty size", "r").read())
 _, term_width = os.popen("stty size", "r").read().split()
 term_width = int(term_width)
-
-
 
 def format_time(seconds):
     days = int(seconds / 3600 / 24)
@@ -51,8 +48,6 @@ def format_time(seconds):
     if f == "":
         f = "0ms"
     return f
-
-
 
 def get_current_git_version():
     import git
@@ -151,7 +146,6 @@ def read_examples(input_path, is_inference):
         all_snippets: [[ind, snippet1], [ind, snippet2], ...] # for test time
     }
     """
-
     with open(input_path) as f:
         data_all = json.load(f)
 
@@ -159,6 +153,7 @@ def read_examples(input_path, is_inference):
     for each_data in data_all:
         this_dialog_id = each_data["dialogue_id"]
         all_snippets = each_data["entity_passages_sents"]
+
         for ind, turn in enumerate(each_data["turns"]):
             if turn["speaker"] == "SYSTEM":
                 this_turn_id = ind // 2
@@ -173,9 +168,7 @@ def read_examples(input_path, is_inference):
                         all_snippets = []
 
                         for each_query in each_data["entity_passages_sents"]:
-                            for each_passage in each_data["entity_passages_sents"][
-                                each_query
-                            ]:
+                            for each_passage in each_data["entity_passages_sents"][each_query]:
                                 passage_title = each_passage[0]
 
                                 for each_snippet in each_passage[1:]:
@@ -293,9 +286,7 @@ def read_examples(input_path, is_inference):
     return data_all, res
 
 
-def wrap_single_pair(
-    tokenizer, question, context, label, max_seq_length, cls_token, sep_token
-):
+def wrap_single_pair(tokenizer, question, context, label, max_seq_length, cls_token, sep_token):
     """
     single pair of question, context, label feature
     """
@@ -338,9 +329,7 @@ def wrap_single_pair(
     return this_input_feature
 
 
-def convert_single_example(
-    example, option, is_training, tokenizer, max_seq_length, cls_token, sep_token
-):
+def convert_single_example(example, option, is_training, tokenizer, max_seq_length, cls_token, sep_token):
     """convert all examples"""
 
     # {
@@ -450,7 +439,6 @@ def convert_examples_to_features(
         res_all.extend(features_all)
 
     return res, res_neg, res_all
-
 
 def write_predictions(all_predictions, output_prediction_file):
     """Writes final predictions in json format."""

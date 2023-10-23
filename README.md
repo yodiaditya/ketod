@@ -3,14 +3,27 @@
 This repo contains the dataset from NAACL 2022 paper "KETOD: Knowledge-Enriched Task-Oriented Dialogue"
 <https://arxiv.org/abs/2205.05589>
 
+Notes: I made this modification to works with latest version of pytorch and huggingface transformers.
+
+## Requirements
+Make sure to install Pytorch https://pytorch.org/get-started/locally and another dependencies packages
+```
+pip install -r requirements.txt
+```
+
 ## Dataset Generation
-KETOD is built upon the google SGD dataset. Here we release our knowledge-enriched utterances annotations and the script to generate the final dataset. 
+If you never heard about Google SGD dataset, please read it here: https://blog.research.google/2019/10/introducing-schema-guided-dialogue.html   
+KETOD is built upon the google SGD dataset and combined with author knowledge-enriched utterances annotations and the script to generate the final dataset. 
 
-1. Go to <https://github.com/google-research-datasets/dstc8-schema-guided-dialogue> to download the SGD dataset. 
-2. Unzip ketod_release.zip and put with the SGD dataset in the same directory. 
-3. Edit the main entry of gen_ketod_data.py to set up your own data paths. 
-4. Run 'python gen_ketod_data.py' to generate the full KETOD dataset. 
+To generate the full KETOD dataset in root folder, execute this:
+```
+python gen_ketod_data.py 
+```
 
+Notes: this will combine between SGD dataset and `enriched knowledge` dataset from author.
+Three new files generated at `ketod_release` folder: `train_final.json`, `dev_final.json`, and `test_final.json`.
+
+Have a look on my detailed comments in the file `gen_ketod_data.py` or see the dataset format below.  
 
 ## Dataset Format
 
@@ -28,17 +41,39 @@ Each entry of the data is one dialogue. It has the following fields:
     }
   
 "dialog_query": all the entity queries we use to do knowledge retrieval in this dialog
-
 "entity_passages": all the wikipedia passages retrieved in this dialog
-
 "entity_passage_sents": all the wikipedia passages retrieved in this dialog, breaked into snippets associated with index numbers
 ```
 
-## Code
-To run the model, go to the "code" folder. 
+## Knowledge Selection Model Dataset Generation
+To run the knowledge selection model, go to "kg_selection" folder and execute `process_data.py`   
+Have a look my detailed comments inside the file  
 
-To run the knowledge selection model, go to "kg_selection" folder: run process_data.py first, then train the model with Train.py, generate the kg selection results with Test.py, for all train, dev, and test sets. 
+```
+cd code 
+python process_data.py --data train_final.json
+python process_data.py --data dev_final.json
+python process_data.py --data test_final.json
+```
 
+And this will produce file `processed_kg_select_train_final.json`, `processed_kg_select_dev_final.json` and `processed_kg_select_test_final.json` in `ketod_release` folder   
+
+## Train Knowledge Selection Model
+Edit file `run_model.sh` and adjust your GPU. Next, edit `config_py` and adjust the `batch_size` depending on your GPU.
+For example, using 2x RTX 4090, the batch size is 48 or 56.
+
+Train the model 
+```
+bash run_model.sh
+```
+
+Run Test. Modify `run_model.sh` and comment `Main.py` and uncomment `Test.py`. Then run it again.
+
+```
+bash run_model.sh
+```
+
+## Running SimpleToDPlus Model
 To run the SimpleToDPlus model, go to "simpletodplus" folder: modify and run gen_kg_train.py to generate data files with the kg selection results. Then run gen_data.py to generate train/dev/test files for the model input formats. Using the run_simpletod.sh script, run train_simpletod.py for training, and test_simpletod_simple.py for testing. You need to modify and follow the steps at the end of the test_simpletod_simple.py file to generate the results for each step. 
 
 ## Citation

@@ -5,15 +5,16 @@ import json
 import copy
 import random
 import argparse
+import os
 
-root = "/data/users/zhiyuchen/todkg_dataset/runs/model1/"
-tgt = "/data/users/zhiyuchen/todkg_dataset/runs/model1/"
+parent_folder = os.path.abspath("../..")
+root = parent_folder + "/ketod_release/"
+tgt = root
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", default="train_final.json", type=str, required=False, help="data file name")
     args = parser.parse_args()
-
 
     inlm = []
     inlm_gold_action = []
@@ -27,6 +28,7 @@ def main():
 
     with open(root + args.data, "r", encoding='utf8') as f:
         data = json.load(f)
+
     i = 0
     while i < len(data):
 
@@ -37,7 +39,6 @@ def main():
             slots = copy.deepcopy(data[i]["turns"][j]["frames"][0]["slots"])
             slots.sort(key = lambda x : -x["start"])
             delex = data[i]["turns"][j]["utterance"]
-
 
             # data[i]["turns"][j]["delex"] = delex
             target = ''
@@ -56,7 +57,6 @@ def main():
                 target += ('<|belief|> <|endofbelief|> ')
             action = copy.deepcopy(data[i]["turns"][j]["frames"][0]["actions"])
             action.sort(key = lambda x : x["act"])
-
 
             # db result, use gold db results
             db_list = []
@@ -186,7 +186,6 @@ def main():
 
     with open(tgt + "/processed_model1_" + args.data, "w") as f:
         json.dump(data, f, indent=1)
-
 
     # random.shuffle(inlm)
     with open(tgt + "model1.lm.input."+ args.data.split(".")[0] +".txt", "w", encoding='utf8') as f: #SimpleTOD

@@ -67,14 +67,47 @@ Train the model
 bash run_model.sh
 ```
 
-Run Test. Modify `run_model.sh` and comment `Main.py` and uncomment `Test.py`. Then run it again.
+You will see on the `outputs` folder the model is saved. For example: `kg_select_bert_base__2023....`
 
+## Generate Prediction.json KG Model
+1. Modify the config.py and point `saved_model_path` to the latest model that created in `outputs` folder to test. For example:
+
+```
+saved_model_path = output_path + "kg_select_bert_base__20231023181001/saved_model/loads/1/model.pt"
+```
+
+2. Generate `train`, `valid` and `test` prediction.json. 
+Modify the `Test.py` by comment and uncomment the following lines to use the train, val and test data. For example:  
+
+```
+# modify this line to use the train, val and test data
+
+test_data, test_examples = read_examples(input_path=conf.train_file, is_inference=True)
+# test_data, test_examples = read_examples(input_path=conf.valid_file, is_inference=True)
+# test_data, test_examples = read_examples(input_path=conf.test_file, is_inference=True)
+```
+
+Run `run_model.sh` to generate the prediction.json on each dataset. Modify `Test.py`,   
+comment `train` and uncomment `valid`, run `bash run_model.sh` again. Repeat for `test`.  
+
+
+3. Modify `run_model.sh` and comment `Main.py` and uncomment `Test.py`. Then run the script.
 ```
 bash run_model.sh
 ```
 
+This will generate inference output, for example: `inference_only_20231023190626_kg_select_bert_base_/results/test/predictions.json`
+
 ## Running SimpleToDPlus Model
-To run the SimpleToDPlus model, go to "simpletodplus" folder: modify and run gen_kg_train.py to generate data files with the kg selection results. Then run gen_data.py to generate train/dev/test files for the model input formats. Using the run_simpletod.sh script, run train_simpletod.py for training, and test_simpletod_simple.py for testing. You need to modify and follow the steps at the end of the test_simpletod_simple.py file to generate the results for each step. 
+To run the SimpleToDPlus model, go to `simpletodplus`, modify and run `gen_kg_train.py` to generate data files with the kg selection results. 
+```
+# test
+json_in = root + "inference_only_20231023190626_kg_select_bert_base_/results/test/predictions.json"
+json_out = root + "model1/" + "test_retrieved.json"
+merge_train(json_in, json_out, topn_snippets=3, is_test=True)
+```
+
+Then run gen_data.py to generate train/dev/test files for the model input formats. Using the run_simpletod.sh script, run train_simpletod.py for training, and test_simpletod_simple.py for testing. You need to modify and follow the steps at the end of the test_simpletod_simple.py file to generate the results for each step. 
 
 ## Citation
 If you find this project useful, please cite it using the following format

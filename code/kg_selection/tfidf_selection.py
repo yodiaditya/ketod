@@ -30,11 +30,8 @@ def tfidf_retrieve(json_in, json_out):
     '''
     tfidf retriever
     '''
-
-
     with open(json_in) as f:
         data = json.load(f)
-
 
     # take top ten
     all_recall = 0.0
@@ -49,9 +46,6 @@ def tfidf_retrieve(json_in, json_out):
                 passage_title = each_passage[0]
                 for each_snippet in each_passage[1:]:
                     all_snippets.append(each_snippet[1])
-
-
-
 
         for ind, turn in enumerate(each_data["turns"]):
             prev_user_turn_utter = each_data["turns"][ind-1]["utterance"]
@@ -84,8 +78,6 @@ def tfidf_retrieve(json_in, json_out):
                 all_recall_3 += (float(correct_3) / len(turn["kg_snippets"]))
 
             turn["merge_retrieved"] = retrieved_text
-
-
 
         res.append(each_data)
 

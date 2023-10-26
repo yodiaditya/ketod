@@ -1,25 +1,20 @@
 # Copyright (c) Meta Platforms, Inc. and its affiliates.
 import json
 from tqdm import tqdm
-
-
+import os
 from utils import get_kg_snippets_dict
+
 '''
 merge kg selection results with original
 '''
-
-
 def merge_train(json_in, json_out, topn_snippets=3, is_test=True):
     '''
     merge train or dev
     '''
-
     with open(json_in) as f:
         data_all = json.load(f)
 
-
     for each_data in tqdm(data_all):
-
         all_kg_snippets_dict = get_kg_snippets_dict(each_data)
 
         for turn in each_data["turns"]:
@@ -48,32 +43,31 @@ def merge_train(json_in, json_out, topn_snippets=3, is_test=True):
 
                 turn["merge_retrieved"] = this_retrieved_kg_text
 
-
     with open(json_out, "w") as f:
         json.dump(data_all, f, indent=4)
 
+parent_folder = os.path.abspath("../..")
+root = parent_folder + "/outputs/"
+tgt = root + "model1/"
 
+try:
+    os.makedirs(tgt, exist_ok=False)
+except:
+    pass
 
-
-
-root = "/data/users/zhiyuchen/outputs/"
-tgt = "/data/users/zhiyuchen/todkg_dataset/runs/"
-
-# # train
-# json_in = root + "inference_only_20210818034712_kg_select_bert_base_train/results/test/predictions.json"
-# json_out = tgt + "model1/" + "train_final.json"
-
-# merge_train(json_in, json_out, topn_snippets=3, is_test=False)
-
-# # dev
-# json_in = root + "inference_only_20210818034804_kg_select_bert_base_dev/results/test/predictions.json"
-# json_out = tgt + "model1/" + "dev_final.json"
+# train
+# json_in = root + "inference_only_20231024221333_kg_select_bert_base_/results/test/predictions.json"
+# json_out = tgt + "train_final.json"
 
 # merge_train(json_in, json_out, topn_snippets=3, is_test=False)
 
-
-# test
-json_in = root + "inference_only_20210818034853_kg_select_bert_base_test/results/test/predictions.json"
-json_out = tgt + "model1/" + "test_retrieved.json"
+# dev
+json_in = root + "inference_only_20231025071409_kg_select_bert_base_/results/test/predictions.json"
+json_out = tgt + "dev_final.json"
 
 merge_train(json_in, json_out, topn_snippets=3, is_test=True)
+
+# test
+# json_in = root + "inference_only_20231025073933_kg_select_bert_base_/results/test/predictions.json"
+# json_out = tgt + "test_final.json"
+# merge_train(json_in, json_out, topn_snippets=3, is_test=True)

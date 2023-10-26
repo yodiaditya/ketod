@@ -14,6 +14,8 @@ from torch import nn
 import torch
 import torch.optim as optim
 
+from multiprocessing import Pool
+
 from Model import Bert_model
 
 # check which model is being used from the config file
@@ -50,8 +52,8 @@ else:
     log_file = os.path.join(results_path, 'log.txt')
 
 train_data, train_examples = read_examples(input_path=conf.train_file, is_inference=False)
-valid_data, valid_examples = read_examples(input_path=conf.valid_file, is_inference=True)
-test_data, test_examples = read_examples(input_path=conf.test_file, is_inference=True)
+valid_data, valid_examples = read_examples(input_path=conf.valid_file, is_inference=False)
+# test_data, test_examples = read_examples(input_path=conf.test_file, is_inference=False)
 
 kwargs = {
     "examples": train_examples,
@@ -69,19 +71,19 @@ kwargs["examples"] = valid_examples
 kwargs["is_training"] = False
 valid_features = convert_examples_to_features(**kwargs)
 
-kwargs["examples"] = test_examples
-test_features = convert_examples_to_features(**kwargs)
+# kwargs["examples"] = test_examples
+# test_features = convert_examples_to_features(**kwargs)
 
 def train():
     # keep track of all input parameters
     write_log(log_file, "####################INPUT PARAMETERS###################")
+
     for attr in conf.__dict__:
         value = conf.__dict__[attr]
         write_log(log_file, attr + " = " + str(value))
     write_log(log_file, "#######################################################")
 
-    model = Bert_model(hidden_size=model_config.hidden_size,
-                       dropout_rate=conf.dropout_rate)
+    model = Bert_model(hidden_size=model_config.hidden_size, dropout_rate=conf.dropout_rate)
 
     model = nn.DataParallel(model)
     model.to(conf.device)
@@ -89,7 +91,9 @@ def train():
     criterion = nn.CrossEntropyLoss(reduction='none', ignore_index=-1)
     model.train()
 
-    train_iterator = DataLoader(is_training=True, data=train_features, batch_size=conf.batch_size, shuffle=True)
+    train_iterator = DataLoader(is_training=True, 
+                                data=train_features, 
+                                batch_size=conf.batch_size, shuffle=True)
 
     k = 0
     record_k = 0
@@ -100,13 +104,6 @@ def train():
         train_iterator.reset()
 
         for x in train_iterator:
-
-            # results_path_cnt = os.path.join(
-            #     results_path, 'loads', str(k // conf.report))
-            # os.makedirs(results_path_cnt, exist_ok=True)
-            # validation_result = evaluate(
-            #     train_examples, train_features, model, results_path_cnt, 'valid')
-
             input_ids = torch.tensor(x['input_ids']).to(conf.device)
             input_mask = torch.tensor(x['input_mask']).to(conf.device)
             segment_ids = torch.tensor(x['segment_ids']).to(conf.device)
@@ -148,7 +145,8 @@ def train():
 
                     results_path_cnt = os.path.join(results_path, 'loads', str(k // conf.report))
                     os.makedirs(results_path_cnt, exist_ok=True)
-                    validation_result = evaluate(valid_examples, valid_features, model, results_path_cnt, 'valid')
+
+                    validation_result = evaluate(valid_examples, valid_features, model, results_path_cnt, "valid")
                     # write_log(log_file, validation_result)
 
                 model.train()
@@ -168,7 +166,6 @@ def evaluate(data_ori, data, model, ksave_dir, mode='valid'):
 
     with torch.no_grad():
         for x in tqdm(data_iterator):
-
             input_ids = x['input_ids']
             input_mask = x['input_mask']
             segment_ids = x['segment_ids']
@@ -184,7 +181,6 @@ def evaluate(data_ori, data, model, ksave_dir, mode='valid'):
                     pad_x = [0] * each_len
                     each_item += [pad_x] * (conf.batch_size_test - ori_len)
 
-
             input_ids = torch.tensor(input_ids).to(conf.device)
             input_mask = torch.tensor(input_mask).to(conf.device)
             segment_ids = torch.tensor(segment_ids).to(conf.device)
@@ -197,10 +193,10 @@ def evaluate(data_ori, data, model, ksave_dir, mode='valid'):
             all_snippet_id.extend(snippet_id)
 
     output_prediction_file = os.path.join(ksave_dir_mode, "predictions.json")
-    print("OUTPUT PREDICTION FILE: ", output_prediction_file)
+    # print("OUTPUT PREDICTION FILE: ", output_prediction_file)
 
     if mode == "valid":
-        print_res = retrieve_evaluate(all_logits, all_dialog_id, all_turn_id, all_snippet_id, output_prediction_file, conf.valid_file, topn=conf.topn, is_inference=True)
+        print_res = retrieve_evaluate(all_logits, all_dialog_id, all_turn_id, all_snippet_id, output_prediction_file, conf.valid_file, topn=conf.topn, is_inference=False)
     else:
         print_res = retrieve_evaluate(all_logits, all_dialog_id, all_turn_id, all_snippet_id, output_prediction_file, conf.test_file, topn=conf.topn, is_inference=False)
 

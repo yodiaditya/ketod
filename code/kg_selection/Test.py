@@ -15,7 +15,6 @@ from torch import nn
 import torch
 import torch.optim as optim
 
-
 from Model import Bert_model
 
 if conf.pretrained_model == "bert":
@@ -30,17 +29,20 @@ elif conf.pretrained_model == "roberta":
     tokenizer = RobertaTokenizer.from_pretrained(conf.model_size)
     model_config = RobertaConfig.from_pretrained(conf.model_size)
 
-
 saved_model_path = os.path.join(conf.output_path, conf.saved_model_path)
 # model_dir_name = datetime.now().strftime("%Y%m%d%H%M%S")
 model_dir_name = datetime.now().strftime("%Y%m%d%H%M%S") + "_" + conf.model_save_name
-model_dir = os.path.join(conf.output_path, 'inference_only_' + model_dir_name)
+model_dir = os.path.join(conf.output_path, 'train_inference_only_' + model_dir_name)
 results_path = os.path.join(model_dir, "results")
 os.makedirs(results_path, exist_ok=False)
 log_file = os.path.join(results_path, 'log.txt')
 test_feature_file = os.path.join(results_path, 'this_features.txt')
 
-test_data, test_examples = read_examples(input_path=conf.test_file, is_inference=True)
+# modify this line to use the train, val and test data
+
+test_data, test_examples = read_examples(input_path=conf.train_file, is_inference=True)
+# test_data, test_examples = read_examples(input_path=conf.valid_file, is_inference=True)
+# test_data, test_examples = read_examples(input_path=conf.test_file, is_inference=True)
 
 kwargs = {"examples": test_examples,
           "tokenizer": tokenizer,
@@ -59,12 +61,10 @@ with open(test_feature_file, "w") as f:
 #     test_features = json.load(f)
 
 def generate(data_ori, data, model, ksave_dir, mode='test'):
-
     ksave_dir_mode = os.path.join(ksave_dir, mode)
     os.makedirs(ksave_dir_mode, exist_ok=True)
 
-    data_iterator = DataLoader(
-        is_training=False, data=data, batch_size=conf.batch_size_test, shuffle=False)
+    data_iterator = DataLoader(is_training=False, data=data, batch_size=conf.batch_size_test, shuffle=False)
 
     k = 0
     all_logits = []
@@ -90,21 +90,18 @@ def generate(data_ori, data, model, ksave_dir, mode='test'):
                     pad_x = [0] * each_len
                     each_item += [pad_x] * (conf.batch_size_test - ori_len)
 
-
             input_ids = torch.tensor(input_ids).to(conf.device)
             input_mask = torch.tensor(input_mask).to(conf.device)
             segment_ids = torch.tensor(segment_ids).to(conf.device)
 
-            logits = model(True, input_ids, input_mask,
-                           segment_ids, device=conf.device)
+            logits = model(True, input_ids, input_mask, segment_ids, device=conf.device)
 
             all_logits.extend(logits.tolist())
             all_dialog_id.extend(dialog_id)
             all_turn_id.extend(turn_id)
             all_snippet_id.extend(snippet_id)
 
-    output_prediction_file = os.path.join(ksave_dir_mode,
-                                          "predictions.json")
+    output_prediction_file = os.path.join(ksave_dir_mode, "predictions.json")
 
     if mode == "valid":
         print_res = retrieve_evaluate(all_logits, all_dialog_id, all_turn_id, all_snippet_id, output_prediction_file, conf.valid_file, topn=conf.topn, is_inference=True)
@@ -113,12 +110,12 @@ def generate(data_ori, data, model, ksave_dir, mode='test'):
 
     write_log(log_file, print_res)
     print(print_res)
+
     return
 
 
 def generate_test():
-    model = Bert_model(hidden_size=model_config.hidden_size,
-                       dropout_rate=conf.dropout_rate,)
+    model = Bert_model(hidden_size=model_config.hidden_size, dropout_rate=conf.dropout_rate,)
 
     model = nn.DataParallel(model)
     model.to(conf.device)

@@ -40,21 +40,17 @@ parser.add_argument("--neg_sample", action="store_true", help="whether to do neg
 parser.add_argument("--neg_sample_rate", type=int, default=3, help="rate of nochitchat to chitchat")
 
 
-
-
 def set_seed(args):
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     if args.n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
 
-
 args = parser.parse_args()
 args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
 args.n_gpu = 0 if args.no_cuda else torch.cuda.device_count()
 
-model_dir_name = args.model_save_name + "_" + \
-    datetime.now().strftime("%Y%m%d%H%M%S")
+model_dir_name = args.model_save_name + "_" + datetime.now().strftime("%Y%m%d%H%M%S")
 model_dir = os.path.join(args.output_path, model_dir_name)
 results_path = os.path.join(model_dir, "results")
 saved_model_path = os.path.join(model_dir, "saved_model")
@@ -77,12 +73,10 @@ model.to(args.device)
 optimizer = optim.Adam(model.parameters(), args.learning_rate)
 model.train()
 
-
 def lm_pass(model, prompt_text, dev=True):
     '''
     language modeling function
     '''
-
     encodings_dict = tokenizer.batch_encode_plus(prompt_text, padding=True)
 
     input_ids = torch.tensor(encodings_dict['input_ids'])
@@ -118,7 +112,6 @@ def lm_pass(model, prompt_text, dev=True):
     return loss
 
 
-
 with open(args.input, "r") as f:
     prompts_ori = f.read().strip().split("\n")
     print("Num train: ", len(prompts_ori))
@@ -140,7 +133,6 @@ print("Chitchat: ", len(prompts_chitchat))
 print("Nochitchat: ", len(prompts_nochitchat))
 num_train = len(prompts_chitchat) * (args.neg_sample_rate + 1)
 
-
 batch_size = args.batch_size
 num_batch = num_train // batch_size if num_train % batch_size == 0 \
 else num_train // batch_size + 1
@@ -152,8 +144,6 @@ start_time = time.time()
 k = 0
 record_k = 0
 record_loss = 0.0
-
-
 
 # keep track of all input parameters
 write_log(log_file, "####################INPUT PARAMETERS###################")

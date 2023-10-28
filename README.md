@@ -14,6 +14,8 @@ Make sure to install Pytorch https://pytorch.org/get-started/locally and another
 pip install -r requirements.txt
 ```
 
+or you can use `environment.yml` preferable for anaconda environment  
+
 ## Dataset Generation
 If you never heard about Google SGD dataset, please read it here: https://blog.research.google/2019/10/introducing-schema-guided-dialogue.html   
 KETOD is built upon the google SGD dataset and combined with author knowledge-enriched utterances annotations and the script to generate the final dataset. 

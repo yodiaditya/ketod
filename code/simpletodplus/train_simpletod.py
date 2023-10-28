@@ -105,12 +105,10 @@ def lm_pass(model, prompt_text, dev=True):
     labels = input_ids.to(args.device)
     position_ids = position_ids.to(args.device)
 
-
     outputs = model(input_ids=input_ids, labels=labels, position_ids=position_ids, return_dict=True)
     loss = outputs.loss.sum()
 
     return loss
-
 
 with open(args.input, "r") as f:
     prompts_ori = f.read().strip().split("\n")
@@ -153,7 +151,6 @@ for attr in args.__dict__:
 write_log(log_file, "#######################################################")
 
 for _ in range(args.max_epoch):
-
     # subsample negative examples?
     # random.shuffle(prompts_chitchat)
     random.shuffle(prompts_nochitchat)
@@ -164,7 +161,6 @@ for _ in range(args.max_epoch):
     random.shuffle(prompts)
 
     for batch in range(num_batch):
-
         prompt_text = prompts[batch * batch_size: (batch + 1) * batch_size]
 
         model.zero_grad()

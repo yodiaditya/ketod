@@ -4,6 +4,9 @@ This repo contains the dataset from NAACL 2022 paper "KETOD: Knowledge-Enriched 
 <https://arxiv.org/abs/2205.05589>
 
 Notes: I made this modification to works with latest version of pytorch and huggingface transformers.
+Also, I provided the `simple_demo.py` in `simpletodplus` folder to run the model with the trained model.
+
+![alt text for screen readers](demo.png "Demo KETOD").
 
 ## Requirements
 Make sure to install Pytorch https://pytorch.org/get-started/locally and another dependencies packages
@@ -60,23 +63,24 @@ And this will produce file `processed_kg_select_train_final.json`, `processed_kg
 
 ## Train Knowledge Selection Model
 Edit file `run_model.sh` and adjust your GPU. Next, edit `config_py` and adjust the `batch_size` depending on your GPU.
-For example, using 2x RTX 4090, the batch size is 48 or 56.
 
 Train the model 
+
 ```
 bash run_model.sh
 ```
 
-You will see on the `outputs` folder the model is saved. For example: `kg_select_bert_base__2023....`
+You will see on the `outputs` folder the model is saved. For example: `kg_select_bert_base__2023....`   
 
+Modify saved_model_path in `config.py` to refer into the model checkpoint. For example:   
+
+```
+saved_model_path = output_path + "kg_select_bert_base__20231026164959/saved_model/loads/10/model.pt"
+```
+  
 ## Generate Prediction.json KG Model
-1. Modify the config.py and point `saved_model_path` to the latest model that created in `outputs` folder to test. For example:
 
-```
-saved_model_path = output_path + "kg_select_bert_base__20231023181001/saved_model/loads/1/model.pt"
-```
-
-2. Generate `train`, `valid` and `test` prediction.json. 
+Generate `train`, `valid` and `test` prediction.json using `Test.py`   
 Modify the `Test.py` by comment and uncomment the following lines to use the train, val and test data. For example:  
 
 ```
@@ -87,15 +91,13 @@ test_data, test_examples = read_examples(input_path=conf.train_file, is_inferenc
 # test_data, test_examples = read_examples(input_path=conf.test_file, is_inference=True)
 ```
 
-Run `run_model.sh` to generate the prediction.json on each dataset. Modify `Test.py`,   
-comment `train` and uncomment `valid`, run `bash run_model.sh` again. Repeat for `test`.  
+Un-comment `Test.py` in `run_model.sh`, and comment `Main.py`    
+Run `bash run_model.sh` and keep modify it to produce `train``, `valid`` and `test`.  
 
 
-3. Modify `run_model.sh` and comment `Main.py` and uncomment `Test.py`. Then run the script.
 ```
 bash run_model.sh
 ```
-
 This will generate inference output, for example: `inference_only_20231023190626_kg_select_bert_base_/results/test/predictions.json`
 
 ## Running SimpleToDPlus Model
@@ -107,7 +109,19 @@ json_out = root + "model1/" + "test_retrieved.json"
 merge_train(json_in, json_out, topn_snippets=3, is_test=True)
 ```
 
-Then run gen_data.py to generate train/dev/test files for the model input formats. Using the run_simpletod.sh script, run train_simpletod.py for training, and test_simpletod_simple.py for testing. You need to modify and follow the steps at the end of the test_simpletod_simple.py file to generate the results for each step. 
+Then run gen_data.py to generate train/dev/test files for the model input formats.  
+
+Using the run_simpletod.sh script, run train_simpletod.py for training, and test_simpletod_simple.py for testing. 
+You need to modify and follow the steps at the end of the test_simpletod_simple.py file to generate the results for each step. 
+
+## Running DEMO of model
+To run the demo model, go to `simpletodplus`, run `simple_demo.py <path_to_checkpoint>`.
+
+For example:
+
+```
+python simple_demo.py ../../outputs/model1_rand_20231027120607/saved_model/loads/21/model.pt
+```
 
 ## Citation
 If you find this project useful, please cite it using the following format

@@ -14,7 +14,6 @@ from tqdm import tqdm
 '''
 params list
 '''
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--no_cuda", action="store_true", help="avoid using CUDA when available")
 parser.add_argument("--seed", type=int, default=42, help="random seed for initialization")
@@ -22,14 +21,12 @@ parser.add_argument("--saved_model_path", type=str, default="output", help="path
 parser.add_argument("--output_path", type=str, help="output path")
 parser.add_argument("--model_dir_name", type=str, help="model inference directory name")
 
-
 parser.add_argument("--gold_action", action="store_true", help="whether gold action")
 parser.add_argument("--gold_kg", action="store_true", help="whether gold kg")
 parser.add_argument("--gold_decision", action="store_true", help="whether gold decision")
 parser.add_argument("--test_input_gold_action", type=str, help="input test text file gold action, each line corresponding to one instance")
 parser.add_argument("--test_input_gold_kg", type=str, help="input test text file gold kg, each line corresponding to one instance")
 parser.add_argument("--test_input_gold_decision", type=str, help="input test text file gold kg, each line corresponding to one instance")
-
 
 parser.add_argument("--test_input", type=str, help="input test text file, each line corresponding to one instance")
 parser.add_argument("--test_oracle_input", type=str, help="input test text file oracle, each line corresponding to one instance")
@@ -43,13 +40,10 @@ parser.add_argument("--en_schema", type=str, help="schema file")
 parser.add_argument("--num_passages", type=int, default=2, help="num of passages for each entity")
 parser.add_argument("--num_para", type=int, default=2, help="num of paragraphs for each passage")
 
-
 parser.add_argument("--eos_token_id", type=int, default=None, help="eos token id")
 parser.add_argument("--batch_size", type=int, default=1, help="batch size")
 
 parser.add_argument("--max_seq_len", type=int, default=512, help="max sequence length")
-
-
 
 def set_seed(args):
     np.random.seed(args.seed)
@@ -57,16 +51,15 @@ def set_seed(args):
     if args.n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
 
-
 args = parser.parse_args()
 args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
 args.n_gpu = 0 if args.no_cuda else torch.cuda.device_count()
 
 saved_model_path = os.path.join(args.output_path, args.saved_model_path)
 
-model_dir = os.path.join(
-    args.output_path, 'inference_only_' + args.model_dir_name)
+model_dir = os.path.join(args.output_path, 'inference_only_' + args.model_dir_name)
 results_path = os.path.join(model_dir, "results")
+
 if not os.path.isdir(results_path):
     os.makedirs(results_path, exist_ok=False)
 log_file = os.path.join(results_path, 'log.txt')
@@ -75,7 +68,6 @@ result_file_belief = os.path.join(results_path, 'result_belief.json')
 result_file_action = os.path.join(results_path, 'result_action.json')
 result_file_knowledge = os.path.join(results_path, 'result_knowledge.json')
 result_file_final = os.path.join(results_path, 'result_final.json')
-
 
 set_seed(args)
 
@@ -91,7 +83,6 @@ model.to(args.device)
 model.load_state_dict(torch.load(saved_model_path))
 print("model loaded")
 model.eval()
-
 
 with open(args.test_input_original) as f:
     data_ori = json.load(f)
@@ -109,9 +100,6 @@ num_batch = len(prompts) // batch_size
 if batch_size * num_batch < len(prompts):
     num_batch += 1
 
-
-
-
 # keep track of all input parameters
 write_log(log_file, "####################INPUT PARAMETERS###################")
 for attr in args.__dict__:
@@ -119,16 +107,12 @@ for attr in args.__dict__:
     write_log(log_file, attr + " = " + str(value))
 write_log(log_file, "#######################################################")
 
-
-
 def decode_seq(prompts, eos_token_id):
     # eos_token_id as list
     ret = []
     with torch.no_grad():
         for batch in tqdm(range(num_batch)):
-
             prompt_text = prompts[batch * batch_size: (batch + 1) * batch_size]
-
             encodings_dict = tokenizer.batch_encode_plus(prompt_text, padding=True)
 
             input_ids = torch.tensor(encodings_dict['input_ids'])
@@ -156,7 +140,6 @@ def decode_seq(prompts, eos_token_id):
             start_idx = start_idx.to(args.device)
             position_ids = position_ids.to(args.device)
 
-
             # past = None
             # generated = torch.tensor(encodings_dict['input_ids']).to(args.device)
 
@@ -169,7 +152,6 @@ def decode_seq(prompts, eos_token_id):
             #         next_token_logits = outputs.logits[:, -1, :]
 
             #     next_tokens = torch.argmax(next_token_logits, dim=-1)
-
 
             #     eos_not_in_sents.mul_(next_tokens.ne(eos_token_id).long())
 
@@ -192,7 +174,6 @@ def decode_seq(prompts, eos_token_id):
 
             # ret += [tokenizer.decode(output, skip_special_tokens=False, clean_up_tokenization_spaces=True).replace("<|endoftext|>", "") for output in generated]
 
-
             for step in range(num_tokens_to_produce):
                 outputs = model(input_ids, attention_mask=attn_mask, position_ids=position_ids)
 
@@ -213,7 +194,6 @@ def decode_seq(prompts, eos_token_id):
 
                 if torch.max(eos_not_in_sents) == 0:
                     break
-
 
             ret += [tokenizer.decode(output, skip_special_tokens=False, clean_up_tokenization_spaces=True).replace("<|endoftext|>", "") for output in input_ids]
 
@@ -241,7 +221,6 @@ def gen_belief():
     # decode_belief = []
     # for ind in range(len(decode_belief_mess)):
     #     decode_belief.append(decode_belief_mess[reorder_ind.index(ind)])
-
 
     decode_belief = decode_seq(prompts, eos_token_id = state_eos)
     state_res = []
@@ -295,7 +274,6 @@ def gen_kg_selection_input():
     import nltk.data
     sent_tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 
-
     if args.gold_action:
         with open(args.test_input_gold_action) as f:
             prompts_action = f.read().strip().split("\n")
@@ -305,21 +283,18 @@ def gen_kg_selection_input():
         with open(result_file_action) as f:
             prompts_action = json.load(f)
 
-
     with open(args.en_schema) as f:
         en_schema = json.load(f)
 
     # for checking if is entity
     schema_list = set()
     slot_list = set()
-    for service in en_schema:
-        # service = service.split("_")[0].lower()
-        schema_list.add(service.split("_")[0].lower())
+    # for service in en_schema:
+    #     # service = service.split("_")[0].lower()
+    #     schema_list.add(service.split("_")[0].lower())
 
-        for slot in en_schema[service]:
-            slot_list.add(slot["name"])
-
-
+    #     for slot in en_schema[service]:
+    #         slot_list.add(slot["name"])
 
     ind = 0
     for each_data in data_ori:
@@ -327,7 +302,6 @@ def gen_kg_selection_input():
             if turn["speaker"] == "SYSTEM":
                 # turn["tillaction_generated"] = prompts_action[ind]
                 # ind += 1
-
 
                 turn["tillaction_pred"] = prompts_action[ind]
 
@@ -410,11 +384,8 @@ def gen_kg_selection_input():
 
                 ind += 1
 
-
     with open(args.test_inter, "w") as f:
         json.dump(data_ori, f, indent=4)
-
-
 
 # step 4: add selected knowledge
 def add_selected_kg():
@@ -454,11 +425,8 @@ def add_selected_kg():
     with open(result_file_knowledge, "w") as f:
         json.dump(res, f, indent=4)
 
-
-
 # step 5: gen response
 def gen_response():
-
     if args.gold_kg:
         with open(args.test_input_gold_kg) as f:
             prompts_action = f.read().strip().split("\n")
@@ -472,7 +440,6 @@ def gen_response():
     else:
         with open(result_file_knowledge) as f:
             prompts_action = json.load(f)
-
 
     # with open(result_file_knowledge, "r") as f:
     #     prompts_action = json.load(f)
@@ -489,7 +456,6 @@ def gen_response():
         json.dump(response_res, f, indent=4)
 
     return response_res
-
 
 # step 5: gen response
 def gen_response_retrieved_kg_gold_decision():
@@ -521,12 +487,9 @@ def gen_response_retrieved_kg_gold_decision():
 
     return response_res
 
-
-
-
 # ### full test pipeline
 # # step 1:
-# gen_belief()
+gen_belief()
 
 # # step 2:
 # gen_action()
@@ -534,17 +497,14 @@ def gen_response_retrieved_kg_gold_decision():
 # # step 3:
 # gen_kg_selection_input()
 
-# # step 4:
+# # # step 4:
 # add_selected_kg()
 
-# # step 5:
+# # # step 5:
 # gen_response()
 
+# ### test with gold kg
+# gen_response()
 
-
-### test with gold kg
-gen_response()
-
-
-# ### generated kg, gold decision
+# # ### generated kg, gold decision
 # gen_response_retrieved_kg_gold_decision()

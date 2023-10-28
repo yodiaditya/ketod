@@ -26,7 +26,7 @@ class parameters():
     device = "cuda"
     mode = "train"
     resume_model_path = ""
-    saved_model_path = output_path + "kg_select_bert_base__20231024202107/saved_model/loads/10/model.pt"
+    saved_model_path = output_path + "kg_select_bert_base__20231026214318/saved_model/loads/10/model.pt"
     build_summary = False
 
     option = "rand"
@@ -53,7 +53,7 @@ class parameters():
     dropout_rate = 0.1
 
     batch_size = 24
-    batch_size_test = 16
+    batch_size_test = 128
     epoch = 10
     learning_rate = 3e-5
 

@@ -30,8 +30,11 @@ def merge_train(json_in, json_out, topn_snippets=3, is_test=True):
                             # make up with the retrieved ones
                             this_added_ind = turn["retrieved"][retrieved_ind]
                             if this_added_ind not in turn["kg_snippets"]:
-                                added_kg_text = all_kg_snippets_dict[turn["retrieved"][retrieved_ind]]
-                                this_retrieved_kg_text.append(added_kg_text)
+                                try:
+                                    added_kg_text = all_kg_snippets_dict[turn["retrieved"][retrieved_ind]]
+                                    this_retrieved_kg_text.append(added_kg_text)
+                                except:
+                                    pass
                             retrieved_ind += 1
                     else:
                         for each_added in turn["retrieved"]:
@@ -39,7 +42,11 @@ def merge_train(json_in, json_out, topn_snippets=3, is_test=True):
 
                 else:
                     for each_added in turn["retrieved"]:
-                        this_retrieved_kg_text.append(all_kg_snippets_dict[each_added])
+                        if each_added != 0:
+                            try:
+                               this_retrieved_kg_text.append(all_kg_snippets_dict[each_added])
+                            except:
+                                pass
 
                 turn["merge_retrieved"] = this_retrieved_kg_text
 
@@ -56,18 +63,18 @@ except:
     pass
 
 # train
-# json_in = root + "inference_only_20231024221333_kg_select_bert_base_/results/test/predictions.json"
-# json_out = tgt + "train_final.json"
+json_in = root + "train_inference_only_20231027002809_kg_select_bert_base_/results/test/predictions.json"
+json_out = tgt + "train_final.json"
 
-# merge_train(json_in, json_out, topn_snippets=3, is_test=False)
+merge_train(json_in, json_out, topn_snippets=3, is_test=False)
 
 # dev
-json_in = root + "inference_only_20231025071409_kg_select_bert_base_/results/test/predictions.json"
+json_in = root + "train_inference_only_20231027000454_kg_select_bert_base_/results/test/predictions.json"
 json_out = tgt + "dev_final.json"
 
-merge_train(json_in, json_out, topn_snippets=3, is_test=True)
+merge_train(json_in, json_out, topn_snippets=3, is_test=False)
 
 # test
-# json_in = root + "inference_only_20231025073933_kg_select_bert_base_/results/test/predictions.json"
-# json_out = tgt + "test_final.json"
-# merge_train(json_in, json_out, topn_snippets=3, is_test=True)
+json_in = root + "train_inference_only_20231026233707_kg_select_bert_base_/results/test/predictions.json"
+json_out = tgt + "test_final.json"
+merge_train(json_in, json_out, topn_snippets=3, is_test=True)

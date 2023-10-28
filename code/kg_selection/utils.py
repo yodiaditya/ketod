@@ -430,7 +430,7 @@ def read_examples(input_path, is_inference):
     return data_all, res
 
 
-def wrap_single_pair(tokenizer, context, question, label, max_seq_length, cls_token, sep_token):
+def wrap_single_pair(tokenizer, question, context, label, max_seq_length, cls_token, sep_token):
     """
     single pair of question, context, label feature
     """
@@ -438,11 +438,11 @@ def wrap_single_pair(tokenizer, context, question, label, max_seq_length, cls_to
     question_tokens = tokenize(tokenizer, question)
     this_gold_tokens = tokenize(tokenizer, context)
 
-    tokens = [cls_token] + this_gold_tokens + [sep_token]
+    tokens = [cls_token] + question_tokens + [sep_token]
     segment_ids = [0] * len(tokens)
 
-    tokens += question_tokens
-    segment_ids.extend([0] * len(question_tokens))
+    tokens += this_gold_tokens
+    segment_ids.extend([0] * len(this_gold_tokens))
 
     if len(tokens) > max_seq_length:
         tokens = tokens[: max_seq_length - 1]

@@ -8,7 +8,7 @@ import argparse
 import os
 
 parent_folder = os.path.abspath("../..")
-root = parent_folder + "/ketod_release/"
+root = parent_folder + "/outputs/model1/"
 tgt = root
 
 def main():
